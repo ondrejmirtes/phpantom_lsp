@@ -145,7 +145,9 @@ pub mod types;
 mod util;
 mod uri_path;
 #[cfg(target_arch = "wasm32")]
-mod wasm_api;
+mod lsp_dispatch;
+#[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+mod wasm_wasi;
 pub(crate) mod virtual_members;
 mod workspace_symbols;
 

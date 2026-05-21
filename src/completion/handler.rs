@@ -999,7 +999,7 @@ impl Backend {
         // that a stack overflow (e.g. from deep trait/inheritance
         // resolution when the subject is a call expression like
         // `collect($x)->`) doesn't crash the LSP server process.
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         let cached_items = self.member_completion_cache.lock().get(&cache_key).cloned();
         let cache_hit = cached_items.is_some();
         let member_items = cached_items.or_else(|| {
@@ -1148,7 +1148,7 @@ impl Backend {
         }
 
         let prefix_lower = prefix.to_ascii_lowercase();
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         let filtered: Vec<CompletionItem> = items
             .into_iter()
             .filter(|item| item.label.to_ascii_lowercase().starts_with(&prefix_lower))
