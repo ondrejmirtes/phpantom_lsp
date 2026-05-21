@@ -1,11 +1,15 @@
+#[cfg(not(target_arch = "wasm32"))]
 use std::net::SocketAddr;
 
 use clap::Parser;
 use clap::builder::Styles;
 use clap::builder::styling::AnsiColor;
+#[cfg(not(target_arch = "wasm32"))]
 use phpantom_lsp::Backend;
 use phpantom_lsp::config;
+#[cfg(not(target_arch = "wasm32"))]
 use tokio::net::TcpListener;
+#[cfg(not(target_arch = "wasm32"))]
 use tower_lsp::{LspService, Server};
 
 const STYLES: Styles = Styles::styled()
@@ -161,7 +165,8 @@ impl From<FormatArg> for phpantom_lsp::analyse::OutputFormat {
     }
 }
 
-#[tokio::main]
+#[cfg_attr(not(target_arch = "wasm32"), tokio::main)]
+#[cfg_attr(target_arch = "wasm32", tokio::main(flavor = "current_thread"))]
 async fn main() {
     let cli = Cli::parse();
 
@@ -257,6 +262,12 @@ async fn main() {
             let exit_code = phpantom_lsp::fix::run(options).await;
             std::process::exit(exit_code);
         }
+        #[cfg(target_arch = "wasm32")]
+        None => {
+            eprintln!("LSP stdio/TCP transport is not available in the wasm build");
+            std::process::exit(1);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
         None => {
             tracing_subscriber::fmt()
                 .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
@@ -311,6 +322,7 @@ async fn main() {
 ///
 /// Accepts either a full address like `127.0.0.1:9257` or just a port number
 /// like `9257`. When only a port is given, defaults to `127.0.0.1`.
+#[cfg(not(target_arch = "wasm32"))]
 fn parse_tcp_address(input: &str) -> SocketAddr {
     // Try parsing as a full SocketAddr first.
     if let Ok(addr) = input.parse::<SocketAddr>() {
