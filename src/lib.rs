@@ -143,6 +143,9 @@ pub(crate) mod toposort;
 mod type_hierarchy;
 pub mod types;
 mod util;
+mod uri_path;
+#[cfg(target_arch = "wasm32")]
+mod wasm_api;
 pub(crate) mod virtual_members;
 mod workspace_symbols;
 

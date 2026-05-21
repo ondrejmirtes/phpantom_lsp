@@ -11,6 +11,7 @@
 /// find variables, call expressions, balanced parentheses, `new`
 /// expressions, etc.) live in [`crate::subject_extraction`].
 use std::collections::HashMap;
+use crate::uri_path::UrlPathExt;
 use std::panic::{self, AssertUnwindSafe, UnwindSafe};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -197,7 +198,7 @@ pub(crate) fn path_to_uri(path: &Path) -> String {
     } else {
         path
     };
-    Url::from_file_path(effective)
+    Url::from_file_path_compat(effective)
         .map(|u| u.to_string())
         .unwrap_or_else(|()| format!("file://{}", effective.display()))
 }
@@ -1517,7 +1518,7 @@ impl Backend {
             return stub_fn_idx.get(func_name).map(|s| s.to_string());
         }
 
-        let path = Url::parse(uri).ok()?.to_file_path().ok()?;
+        let path = Url::parse(uri).ok()?.to_file_path_compat().ok()?;
         std::fs::read_to_string(path).ok()
     }
 
@@ -1546,7 +1547,7 @@ impl Backend {
             return stub_fn_idx.get(func_name).map(|s| Arc::new(s.to_string()));
         }
 
-        let path = Url::parse(uri).ok()?.to_file_path().ok()?;
+        let path = Url::parse(uri).ok()?.to_file_path_compat().ok()?;
         std::fs::read_to_string(path).ok().map(Arc::new)
     }
 

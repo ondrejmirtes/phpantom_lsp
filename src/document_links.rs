@@ -4,6 +4,7 @@
 //! `include_once` paths that resolve to existing files on disk.
 
 use std::path::{Path, PathBuf};
+use crate::uri_path::UrlPathExt;
 
 use bumpalo::Bump;
 use mago_span::HasSpan;
@@ -29,7 +30,7 @@ impl Backend {
     ///
     /// Parses the file and walks the AST for include/require expressions.
     pub fn handle_document_link(&self, uri: &str, content: &str) -> Option<Vec<DocumentLink>> {
-        let file_path = Url::parse(uri).ok().and_then(|u| u.to_file_path().ok());
+        let file_path = Url::parse(uri).ok().and_then(|u| u.to_file_path_compat().ok());
         let file_dir = file_path.as_deref().and_then(|p| p.parent());
 
         let arena = Bump::new();
@@ -44,7 +45,7 @@ impl Backend {
                 collect_include_links_from_statement(stmt, content, dir, &mut include_links);
             }
             for il in include_links {
-                if let Ok(target_url) = Url::from_file_path(&il.resolved_path) {
+                if let Ok(target_url) = Url::from_file_path_compat(&il.resolved_path) {
                     let start = offset_to_position(content, il.start_offset);
                     let end = offset_to_position(content, il.end_offset);
                     links.push(DocumentLink {

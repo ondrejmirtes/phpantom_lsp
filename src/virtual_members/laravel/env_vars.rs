@@ -1,4 +1,5 @@
 use std::ops::ControlFlow;
+use crate::uri_path::UrlPathExt;
 
 use mago_syntax::ast::*;
 use tower_lsp::lsp_types::{Location, Position, Url};
@@ -27,7 +28,7 @@ pub(crate) fn resolve_env_definition(
         return None;
     }
 
-    let env_uri = Url::from_file_path(&env_path).ok()?;
+    let env_uri = Url::from_file_path_compat(&env_path).ok()?;
     let env_content = std::fs::read_to_string(&env_path).ok()?;
     let pos = find_env_key_line(&env_content, &key);
 

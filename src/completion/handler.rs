@@ -26,6 +26,7 @@
 /// are also housed here because they are exclusively used by the
 /// completion handler.
 use std::collections::{HashMap, HashSet};
+use crate::uri_path::UrlPathExt;
 use std::sync::Arc;
 
 use super::resolver::ResolutionCtx;
@@ -1403,7 +1404,7 @@ impl Backend {
     /// For example, `file:///home/user/Test.php` returns `Some("Test")`.
     fn filename_class_name(uri: &str) -> Option<String> {
         let url = Url::parse(uri).ok()?;
-        let file_path = url.to_file_path().ok()?;
+        let file_path = url.to_file_path_compat().ok()?;
         let stem = file_path.file_stem()?;
         let name = stem.to_string_lossy();
         if name.is_empty() {

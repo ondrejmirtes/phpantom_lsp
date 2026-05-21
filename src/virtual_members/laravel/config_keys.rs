@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::uri_path::UrlPathExt;
 
 use bumpalo::Bump;
 use mago_database::file::FileId;
@@ -219,7 +220,7 @@ pub(crate) fn resolve_config_key_declaration(backend: &Backend, key: &str) -> Op
         let config_path = config_dir.join(format!("{}.php", rel_path));
 
         if config_path.is_file() {
-            let target_uri = Url::from_file_path(&config_path).ok()?;
+            let target_uri = Url::from_file_path_compat(&config_path).ok()?;
             let target_uri_string = target_uri.to_string();
             let target_content = backend
                 .get_file_content(&target_uri_string)

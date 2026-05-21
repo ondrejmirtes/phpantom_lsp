@@ -13,6 +13,7 @@
 /// Variable definition resolution (`$var` → most recent assignment /
 /// declaration) is handled by the sibling [`super::variable`] module.
 use std::collections::HashMap;
+use crate::uri_path::UrlPathExt;
 use std::sync::Arc;
 
 use crate::symbol_map::VarDefKind;
@@ -674,7 +675,7 @@ impl Backend {
         } else {
             let file_path = Url::parse(target_uri)
                 .ok()
-                .and_then(|u| u.to_file_path().ok())?;
+                .and_then(|u| u.to_file_path_compat().ok())?;
             self.parse_and_cache_file(&file_path)?
         };
 
@@ -827,7 +828,7 @@ impl Backend {
                 if let Some(file_uri) = self.fqn_uri_index.read().get(*candidate).cloned()
                     && let Some(file_path) = Url::parse(&file_uri)
                         .ok()
-                        .and_then(|u| u.to_file_path().ok())
+                        .and_then(|u| u.to_file_path_compat().ok())
                     && let Some(location) = self.resolve_class_in_file(&file_path, candidate)
                 {
                     return Some(location);

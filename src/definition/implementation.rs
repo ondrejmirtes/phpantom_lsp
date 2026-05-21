@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use crate::uri_path::UrlPathExt;
 use std::path::PathBuf;
 /// Go-to-implementation support (`textDocument/implementation`).
 ///
@@ -711,7 +712,7 @@ impl Backend {
             .fqn_uri_index
             .read()
             .values()
-            .filter_map(|uri| Url::parse(uri).ok().and_then(|u| u.to_file_path().ok()))
+            .filter_map(|uri| Url::parse(uri).ok().and_then(|u| u.to_file_path_compat().ok()))
             .collect();
 
         let loaded_uris: HashSet<String> = self.parsed_uris.read().iter().cloned().collect();

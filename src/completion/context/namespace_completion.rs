@@ -7,6 +7,7 @@
 /// namespace inferred from the path is boosted to the top of the list.
 /// If multiple PSR-4 roots match, the longest match is ranked first.
 use std::collections::HashSet;
+use crate::uri_path::UrlPathExt;
 use std::path::Path;
 
 use tower_lsp::lsp_types::*;
@@ -148,7 +149,7 @@ impl Backend {
             let mappings = self.psr4_mappings.read();
             if let Some(ref root) = *ws {
                 if let Ok(url) = Url::parse(uri) {
-                    if let Ok(file_path) = url.to_file_path() {
+                    if let Ok(file_path) = url.to_file_path_compat() {
                         infer_namespaces_from_path(&file_path, root, &mappings)
                     } else {
                         Vec::new()

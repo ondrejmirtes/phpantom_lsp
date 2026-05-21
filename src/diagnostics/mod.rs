@@ -176,6 +176,7 @@ mod unused_imports;
 pub(crate) mod unused_variables;
 
 use std::sync::Arc;
+use crate::uri_path::UrlPathExt;
 use std::sync::atomic::Ordering;
 
 use tower_lsp::lsp_types::*;
@@ -1163,7 +1164,7 @@ impl Backend {
                 continue;
             }
 
-            let file_path = match uri.parse::<Url>().ok().and_then(|u| u.to_file_path().ok()) {
+            let file_path = match uri.parse::<Url>().ok().and_then(|u| u.to_file_path_compat().ok()) {
                 Some(p) => p,
                 None => continue,
             };
@@ -1341,7 +1342,7 @@ impl Backend {
                 continue;
             }
 
-            let file_path = match uri.parse::<Url>().ok().and_then(|u| u.to_file_path().ok()) {
+            let file_path = match uri.parse::<Url>().ok().and_then(|u| u.to_file_path_compat().ok()) {
                 Some(p) => p,
                 None => continue,
             };
@@ -1499,7 +1500,7 @@ impl Backend {
                 continue;
             }
 
-            let file_path = match uri.parse::<Url>().ok().and_then(|u| u.to_file_path().ok()) {
+            let file_path = match uri.parse::<Url>().ok().and_then(|u| u.to_file_path_compat().ok()) {
                 Some(p) => p,
                 None => continue,
             };
@@ -1638,7 +1639,7 @@ impl Backend {
                 continue;
             }
 
-            let file_path = match uri.parse::<Url>().ok().and_then(|u| u.to_file_path().ok()) {
+            let file_path = match uri.parse::<Url>().ok().and_then(|u| u.to_file_path_compat().ok()) {
                 Some(p) => p,
                 None => continue,
             };

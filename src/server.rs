@@ -21,6 +21,7 @@
 ///   version counter; the worker waits for a quiet period before
 ///   publishing.
 use std::collections::{HashMap, HashSet};
+use crate::uri_path::UrlPathExt;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
@@ -47,7 +48,7 @@ impl LanguageServer for Backend {
         let workspace_root = params
             .root_uri
             .as_ref()
-            .and_then(|uri| uri.to_file_path().ok());
+            .and_then(|uri| uri.to_file_path_compat().ok());
 
         if let Some(root) = workspace_root {
             *self.workspace_root.write() = Some(root);
@@ -1209,7 +1210,7 @@ impl LanguageServer for Backend {
         );
 
         // Resolve the file path from the URI for config discovery.
-        let file_path = Url::parse(&uri).ok().and_then(|u| u.to_file_path().ok());
+        let file_path = Url::parse(&uri).ok().and_then(|u| u.to_file_path_compat().ok());
         let file_path = match file_path {
             Some(p) => p,
             None => return Ok(None),

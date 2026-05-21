@@ -32,6 +32,7 @@
 ///   - Unqualified names resolved via the import table or current namespace
 ///   - Qualified names with alias expansion and namespace prefixing
 use std::collections::HashMap;
+use crate::uri_path::UrlPathExt;
 use std::sync::Arc;
 
 use std::path::Path;
@@ -121,7 +122,7 @@ impl Backend {
         if let Some(file_uri) = class_index_uri
             && let Some(file_path) = Url::parse(&file_uri)
                 .ok()
-                .and_then(|u| u.to_file_path().ok())
+                .and_then(|u| u.to_file_path_compat().ok())
             && let Some(classes) = self.parse_and_cache_file(&file_path)
             && let Some(cls) = classes.iter().find(|c| c.name == last_segment)
         {

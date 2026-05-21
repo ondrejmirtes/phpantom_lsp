@@ -30,6 +30,7 @@
 mod tests;
 
 use std::collections::HashMap;
+use crate::uri_path::UrlPathExt;
 
 use std::sync::atomic::Ordering;
 
@@ -250,7 +251,7 @@ impl Backend {
         let def_uri_str = self.fqn_uri_index.read().get(old_fqn).cloned()?;
 
         let def_url = Url::parse(&def_uri_str).ok()?;
-        let def_path = def_url.to_file_path().ok()?;
+        let def_path = def_url.to_file_path_compat().ok()?;
 
         // Check that the filename matches the old class name.
         let stem = def_path.file_stem()?.to_str()?;
@@ -268,7 +269,7 @@ impl Backend {
         let mut new_path = def_path.clone();
         new_path.set_file_name(format!("{}.php", new_short_name));
 
-        let new_url = Url::from_file_path(&new_path).ok()?;
+        let new_url = Url::from_file_path_compat(&new_path).ok()?;
 
         Some((def_url, new_url))
     }
@@ -1075,8 +1076,8 @@ impl Backend {
                 continue;
             }
 
-            let old_url = Url::from_file_path(&old_dir).ok()?;
-            let new_url = Url::from_file_path(&new_dir).ok()?;
+            let old_url = Url::from_file_path_compat(&old_dir).ok()?;
+            let new_url = Url::from_file_path_compat(&new_dir).ok()?;
             ops.push((old_url, new_url));
         }
 
