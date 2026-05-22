@@ -17,7 +17,7 @@ use std::sync::Arc;
 use std::task::{Context, Poll, Waker};
 use tower_lsp::lsp_types::{
 	CompletionItem, CompletionParams, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
-	GotoDefinitionParams, HoverParams, SignatureHelpParams,
+	DocumentHighlightParams, GotoDefinitionParams, HoverParams, RenameParams, SignatureHelpParams,
 };
 
 // `handle_completion` is `async` only as a trait artifact — it never awaits, so
@@ -66,6 +66,8 @@ impl LspDispatcher {
 			"completionItem/resolve" => Some(self.resolve(params)),
 			"textDocument/hover" => Some(self.hover(params)),
 			"textDocument/definition" => Some(self.definition(params)),
+			"textDocument/documentHighlight" => Some(self.document_highlight(params)),
+			"textDocument/rename" => Some(self.rename(params)),
 			"textDocument/signatureHelp" => Some(self.signature_help(params)),
 			_ => {
 				if id.is_some() {
@@ -159,6 +161,32 @@ impl LspDispatcher {
 		Ok(serde_json::to_value(locations).unwrap_or(Value::Null))
 	}
 
+	fn document_highlight(&self, params: Value) -> Result<Value, (i64, String)> {
+		let params: DocumentHighlightParams = serde_json::from_value(params).map_err(bad_params)?;
+		let uri = params.text_document_position_params.text_document.uri.to_string();
+		let position = params.text_document_position_params.position;
+		let Some(content) = self.backend.get_file_content(&uri) else {
+			return Ok(Value::Null);
+		};
+		match self.backend.handle_document_highlight(&uri, &content, position) {
+			Some(highlights) => Ok(serde_json::to_value(highlights).unwrap_or(Value::Null)),
+			None => Ok(Value::Null),
+		}
+	}
+
+	fn rename(&self, params: Value) -> Result<Value, (i64, String)> {
+		let params: RenameParams = serde_json::from_value(params).map_err(bad_params)?;
+		let uri = params.text_document_position.text_document.uri.to_string();
+		let position = params.text_document_position.position;
+		let Some(content) = self.backend.get_file_content(&uri) else {
+			return Ok(Value::Null);
+		};
+		match self.backend.handle_rename(&uri, &content, position, &params.new_name) {
+			Some(edit) => Ok(serde_json::to_value(edit).unwrap_or(Value::Null)),
+			None => Ok(Value::Null),
+		}
+	}
+
 	fn signature_help(&self, params: Value) -> Result<Value, (i64, String)> {
 		let params: SignatureHelpParams = serde_json::from_value(params).map_err(bad_params)?;
 		let uri = params.text_document_position_params.text_document.uri.to_string();
@@ -187,6 +215,8 @@ fn capabilities() -> Value {
 			},
 			"hoverProvider": true,
 			"definitionProvider": true,
+			"documentHighlightProvider": true,
+			"renameProvider": true,
 			"signatureHelpProvider": { "triggerCharacters": ["(", ","] }
 		},
 		"serverInfo": { "name": "phpantom-wasm", "version": "0.8.0" }
