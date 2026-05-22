@@ -17,7 +17,7 @@ use std::sync::Arc;
 use std::task::{Context, Poll, Waker};
 use tower_lsp::lsp_types::{
 	CompletionItem, CompletionParams, DidChangeTextDocumentParams, DidOpenTextDocumentParams,
-	HoverParams, SignatureHelpParams,
+	GotoDefinitionParams, HoverParams, SignatureHelpParams,
 };
 
 // `handle_completion` is `async` only as a trait artifact — it never awaits, so
@@ -65,6 +65,7 @@ impl LspDispatcher {
 			"textDocument/completion" => Some(self.completion(params)),
 			"completionItem/resolve" => Some(self.resolve(params)),
 			"textDocument/hover" => Some(self.hover(params)),
+			"textDocument/definition" => Some(self.definition(params)),
 			"textDocument/signatureHelp" => Some(self.signature_help(params)),
 			_ => {
 				if id.is_some() {
@@ -139,6 +140,25 @@ impl LspDispatcher {
 		}
 	}
 
+	fn definition(&self, params: Value) -> Result<Value, (i64, String)> {
+		let params: GotoDefinitionParams = serde_json::from_value(params).map_err(bad_params)?;
+		let uri = params.text_document_position_params.text_document.uri.to_string();
+		let position = params.text_document_position_params.position;
+		let Some(content) = self.backend.get_file_content(&uri) else {
+			return Ok(Value::Null);
+		};
+		let locations: Vec<_> = self
+			.backend
+			.resolve_definition(&uri, &content, position)
+			.into_iter()
+			.map(|location| self.backend.translate_location(location))
+			.collect();
+		if locations.is_empty() {
+			return Ok(Value::Null);
+		}
+		Ok(serde_json::to_value(locations).unwrap_or(Value::Null))
+	}
+
 	fn signature_help(&self, params: Value) -> Result<Value, (i64, String)> {
 		let params: SignatureHelpParams = serde_json::from_value(params).map_err(bad_params)?;
 		let uri = params.text_document_position_params.text_document.uri.to_string();
@@ -166,6 +186,7 @@ fn capabilities() -> Value {
 				"resolveProvider": true
 			},
 			"hoverProvider": true,
+			"definitionProvider": true,
 			"signatureHelpProvider": { "triggerCharacters": ["(", ","] }
 		},
 		"serverInfo": { "name": "phpantom-wasm", "version": "0.8.0" }
